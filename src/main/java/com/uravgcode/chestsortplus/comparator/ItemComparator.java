@@ -1,6 +1,8 @@
 package com.uravgcode.chestsortplus.comparator;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
 import org.jspecify.annotations.NullMarked;
@@ -8,17 +10,20 @@ import org.jspecify.annotations.NullMarked;
 import java.util.Comparator;
 
 @NullMarked
+@SuppressWarnings("UnstableApiUsage")
 public final class ItemComparator implements Comparator<ItemStack> {
     private final MaterialComparator materialComparator;
     private final EnchantmentComparator enchantmentComparator;
     private final PotionComparator potionComparator;
     private final InstrumentComparator instrumentComparator;
+    private final PaintingComparator paintingComparator;
 
     public ItemComparator() {
         this.materialComparator = new MaterialComparator();
         this.enchantmentComparator = new EnchantmentComparator();
-        this.instrumentComparator = new InstrumentComparator();
         this.potionComparator = new PotionComparator();
+        this.instrumentComparator = new InstrumentComparator();
+        this.paintingComparator = new PaintingComparator();
     }
 
     @Override
@@ -31,14 +36,19 @@ public final class ItemComparator implements Comparator<ItemStack> {
             if (enchantmentOrder != 0) return enchantmentOrder;
         }
 
+        if (o1.getItemMeta() instanceof PotionMeta meta1 && o2.getItemMeta() instanceof PotionMeta meta2) {
+            final var potionOrder = potionComparator.compare(meta1.getBasePotionType(), meta2.getBasePotionType());
+            if (potionOrder != 0) return potionOrder;
+        }
+
         if (o1.getItemMeta() instanceof MusicInstrumentMeta meta1 && o2.getItemMeta() instanceof MusicInstrumentMeta meta2) {
             final var instrumentOrder = instrumentComparator.compare(meta1.getInstrument(), meta2.getInstrument());
             if (instrumentOrder != 0) return instrumentOrder;
         }
 
-        if (o1.getItemMeta() instanceof PotionMeta meta1 && o2.getItemMeta() instanceof PotionMeta meta2) {
-            final var potionOrder = potionComparator.compare(meta1.getBasePotionType(), meta2.getBasePotionType());
-            if (potionOrder != 0) return potionOrder;
+        if (o1.getType() == Material.PAINTING && o2.getType() == Material.PAINTING) {
+            final var paintingOrder = paintingComparator.compare(o1.getData(DataComponentTypes.PAINTING_VARIANT), o2.getData(DataComponentTypes.PAINTING_VARIANT));
+            if (paintingOrder != 0) return paintingOrder;
         }
 
         if (o1.getItemMeta() instanceof OminousBottleMeta meta1 && o2.getItemMeta() instanceof OminousBottleMeta meta2) {
