@@ -2,6 +2,7 @@ package com.uravgcode.chestsortplus.comparator;
 
 import org.bukkit.potion.PotionType;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -71,7 +72,7 @@ public final class PotionComparator implements Comparator<PotionType> {
     }
 
     @Override
-    public int compare(PotionType o1, PotionType o2) {
+    public int compare(@Nullable PotionType o1, @Nullable PotionType o2) {
         final var order1 = order.getOrDefault(o1, Integer.MAX_VALUE);
         final var order2 = order.getOrDefault(o2, Integer.MAX_VALUE);
         return Integer.compare(order1, order2);

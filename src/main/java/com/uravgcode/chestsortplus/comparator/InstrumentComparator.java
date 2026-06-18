@@ -2,6 +2,7 @@ package com.uravgcode.chestsortplus.comparator;
 
 import org.bukkit.MusicInstrument;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,7 +34,7 @@ public final class InstrumentComparator implements Comparator<MusicInstrument> {
     }
 
     @Override
-    public int compare(MusicInstrument o1, MusicInstrument o2) {
+    public int compare(@Nullable MusicInstrument o1, @Nullable MusicInstrument o2) {
         final var order1 = order.getOrDefault(o1, Integer.MAX_VALUE);
         final var order2 = order.getOrDefault(o2, Integer.MAX_VALUE);
         return Integer.compare(order1, order2);
