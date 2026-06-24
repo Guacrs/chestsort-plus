@@ -5,7 +5,7 @@ import org.bukkit.entity.ChestedHorse;
 import org.bukkit.entity.Llama;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.InventoryType;
+import org.bukkit.event.inventory.InventoryType;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
