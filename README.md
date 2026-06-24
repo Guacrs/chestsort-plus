@@ -1,7 +1,16 @@
 # Chestsort+
 
-Chestsort+ is a modern, lightweight PaperMC plugin that lets players sort chests, other containers, and their own
-inventory by shift-clicking an empty inventory slot.
+Chestsort+ is a modern, lightweight PaperMC plugin that lets players sort containers and their own inventory by
+clicking an empty inventory slot. Folia is supported.
+
+## Sorting
+
+Sorting is opt-in and disabled by default. Each player enables it and picks their keybind in the `/chestsort`
+settings dialog. Once enabled, clicking an empty slot with the chosen keybind sorts that inventory.
+
+- **Keybind:** shift-left click (default) or shift-right click.
+- **Supported inventories:** chests, ender chests, shulker boxes, barrels, droppers, dispensers, hoppers, horse and
+  llama chests, and the player's own inventory.
 
 ## Permission
 
