@@ -32,10 +32,7 @@ public final class SettingsDialog {
     public Dialog create() {
         return Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(Component.text("Chestsort Settings"))
-                .inputs(List.of(
-                    enableDialogInput(),
-                    keybindDialogInput()
-                ))
+                .inputs(List.of(keybindDialogInput()))
                 .build()
             )
             .type(DialogType.confirmation(
@@ -47,34 +44,6 @@ public final class SettingsDialog {
                     .width(100)
                     .build()
             ))
-        );
-    }
-
-    private DialogInput enableDialogInput() {
-        final var dataContainer = player.getPersistentDataContainer();
-        final var enabled = dataContainer.getOrDefault(
-            ChestSortKeys.ENABLED,
-            PersistentDataType.BOOLEAN,
-            false
-        );
-
-        return DialogInput.singleOption(
-            "chestsort",
-            200,
-            List.of(
-                SingleOptionDialogInput.OptionEntry.create(
-                    "enabled",
-                    Component.text("enabled", NamedTextColor.GREEN),
-                    enabled
-                ),
-                SingleOptionDialogInput.OptionEntry.create(
-                    "disabled",
-                    Component.text("disabled", NamedTextColor.RED),
-                    !enabled
-                )
-            ),
-            Component.text("chestsort"),
-            true
         );
     }
 
@@ -101,17 +70,15 @@ public final class SettingsDialog {
                     keybind.equals("SHIFT_RIGHT")
                 )
             ),
-            Component.text("keybind"),
+            Component.text("shift-click keybind"),
             true
         );
     }
 
     private void updateSettings(DialogResponseView response, Audience audience) {
-        final var enabled = "enabled".equals(response.getText("chestsort"));
         final var keybind = ClickType.valueOf(response.getText("keybind"));
 
         final var dataContainer = player.getPersistentDataContainer();
-        dataContainer.set(ChestSortKeys.ENABLED, PersistentDataType.BOOLEAN, enabled);
         dataContainer.set(ChestSortKeys.KEYBIND, PersistentDataType.STRING, keybind.name());
     }
 }

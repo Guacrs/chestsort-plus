@@ -6,6 +6,13 @@ config:
   # current plugin version, do not change this
   version: ${version}
 
+button:
+  # item shown in the player's hotbar while viewing a sortable container
+  material: HOPPER
+  name: "&a&lSort Chest"
+  # hotbar slot (0-8), default 8 is the rightmost hotbar slot
+  slot: 8
+
 categories:
   - combat
   - tools_and_utilities

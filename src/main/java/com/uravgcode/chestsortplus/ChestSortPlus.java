@@ -1,8 +1,10 @@
 package com.uravgcode.chestsortplus;
 
+import com.uravgcode.chestsortplus.button.SortButtonManager;
 import com.uravgcode.chestsortplus.comparator.MaterialComparator;
 import com.uravgcode.chestsortplus.key.ChestSortKeys;
 import com.uravgcode.chestsortplus.listener.InventoryListener;
+import com.uravgcode.chestsortplus.listener.SortButtonListener;
 import com.uravgcode.chestsortplus.update.ConfigUpdater;
 import com.uravgcode.chestsortplus.update.UpdateChecker;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,6 +18,7 @@ public final class ChestSortPlus extends JavaPlugin {
     private static @Nullable ChestSortPlus instance = null;
 
     private final ConfigUpdater configUpdater;
+    private final SortButtonManager sortButtonManager = new SortButtonManager();
 
     public static ChestSortPlus instance() {
         return Objects.requireNonNull(instance, "plugin not initialized");
@@ -35,7 +38,8 @@ public final class ChestSortPlus extends JavaPlugin {
         ChestSortKeys.init(this);
         new UpdateChecker(this).checkForUpdate();
         final var pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(new InventoryListener(), this);
+        pluginManager.registerEvents(new InventoryListener(sortButtonManager), this);
+        pluginManager.registerEvents(new SortButtonListener(sortButtonManager), this);
         reload();
     }
 
