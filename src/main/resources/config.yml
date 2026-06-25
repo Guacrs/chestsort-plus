@@ -9,8 +9,6 @@ config:
 settings:
   # sorting is on by default for all players; they can opt out via /chestsort
   default-enabled: true
-  # show a clickable Sort button in container slot 8 when that slot is empty
-  chest-sort-button: true
 
 categories:
   - combat

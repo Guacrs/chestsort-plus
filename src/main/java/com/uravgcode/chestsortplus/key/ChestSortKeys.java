@@ -8,12 +8,10 @@ import org.jspecify.annotations.NullMarked;
 public final class ChestSortKeys {
     public static NamespacedKey ENABLED = new NamespacedKey("", "");
     public static NamespacedKey KEYBIND = new NamespacedKey("", "");
-    public static NamespacedKey SORT_BUTTON = new NamespacedKey("", "");
 
     public static void init(JavaPlugin plugin) {
         ENABLED = new NamespacedKey(plugin, "enabled");
         KEYBIND = new NamespacedKey(plugin, "keybind");
-        SORT_BUTTON = new NamespacedKey(plugin, "sort_button");
     }
 
     private ChestSortKeys() {}

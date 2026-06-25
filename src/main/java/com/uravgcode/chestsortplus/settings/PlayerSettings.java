@@ -18,8 +18,4 @@ public final class PlayerSettings {
             defaultEnabled
         );
     }
-
-    public static boolean isChestSortButtonEnabled() {
-        return ChestSortPlus.instance().getConfig().getBoolean("settings.chest-sort-button", true);
-    }
 }
