@@ -6,6 +6,12 @@ config:
   # current plugin version, do not change this
   version: ${version}
 
+settings:
+  # sorting is on by default for all players; they can opt out via /chestsort
+  default-enabled: true
+  # show a clickable Sort button in container slot 8 when that slot is empty
+  chest-sort-button: true
+
 categories:
   - combat
   - tools_and_utilities

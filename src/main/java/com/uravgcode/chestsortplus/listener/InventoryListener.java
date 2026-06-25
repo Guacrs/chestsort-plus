@@ -1,45 +1,66 @@
 package com.uravgcode.chestsortplus.listener;
 
 import com.uravgcode.chestsortplus.ChestSortPlus;
+import com.uravgcode.chestsortplus.item.SortButton;
 import com.uravgcode.chestsortplus.key.ChestSortKeys;
-import com.uravgcode.chestsortplus.sorter.InventorySorter;
+import com.uravgcode.chestsortplus.settings.PlayerSettings;
+import com.uravgcode.chestsortplus.sorter.ContainerSorter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.ChestedHorse;
-import org.bukkit.entity.Llama;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public final class InventoryListener implements Listener {
-    private static final int HOTBAR_SORT_BUTTON_SLOT = 8;
-
-    private final InventorySorter inventorySorter;
+    private final ContainerSorter containerSorter;
 
     public InventoryListener() {
-        this.inventorySorter = new InventorySorter();
+        this.containerSorter = new ContainerSorter();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) return;
+        if (!PlayerSettings.isSortingEnabled(player) || !PlayerSettings.isChestSortButtonEnabled()) return;
+
+        final var inventory = event.getInventory();
+        if (!containerSorter.supportsSortButton(inventory)) return;
+
+        Bukkit.getScheduler().runTask(ChestSortPlus.instance(), () -> {
+            if (!player.isOnline()) return;
+            if (!player.getOpenInventory().getTopInventory().equals(inventory)) return;
+            containerSorter.placeSortButtonIfEmpty(inventory);
+            player.updateInventory();
+        });
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryClose(InventoryCloseEvent event) {
+        containerSorter.removeSortButtonIfPresent(event.getInventory());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        final var player = event.getWhoClicked();
-        if (!player.hasPermission("chestsort.use")) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!PlayerSettings.isSortingEnabled(player)) return;
 
-        final var dataContainer = player.getPersistentDataContainer();
-        if (!dataContainer.getOrDefault(ChestSortKeys.ENABLED, PersistentDataType.BOOLEAN, false)) return;
-
+        if (trySortContainerFromChestButton(event)) return;
         if (trySortContainerFromHotbarButton(event)) return;
 
-        final var keybind = ClickType.valueOf(dataContainer.getOrDefault(ChestSortKeys.KEYBIND, PersistentDataType.STRING, "SHIFT_LEFT"));
+        final var keybind = ClickType.valueOf(player.getPersistentDataContainer().getOrDefault(
+            ChestSortKeys.KEYBIND,
+            PersistentDataType.STRING,
+            "SHIFT_LEFT"
+        ));
         if (event.getClick() != keybind) return;
 
         final var clickedItem = event.getCurrentItem();
@@ -56,19 +77,35 @@ public final class InventoryListener implements Listener {
                 if (!isPlayerOnlyView(event)) return;
 
                 if (event.getSlotType() == InventoryType.SlotType.QUICKBAR) {
-                    inventorySorter.sortInventory(inventory, 0, 8);
+                    containerSorter.sortHotbar(inventory);
                 } else {
-                    inventorySorter.sortInventory(inventory, 9, 35);
+                    containerSorter.sortMainInventory(inventory);
                 }
                 event.setCancelled(true);
-                syncInventory(event);
+                syncInventory(player);
             }
             default -> {
-                if (!sortContainerInventory(inventory, holder)) return;
+                if (!containerSorter.sort(inventory, holder)) return;
                 event.setCancelled(true);
-                syncInventory(event);
+                syncInventory(player);
             }
         }
+    }
+
+    private boolean trySortContainerFromChestButton(InventoryClickEvent event) {
+        if (event.getClick() != ClickType.LEFT) return false;
+
+        final var clickedInventory = event.getClickedInventory();
+        if (clickedInventory == null || !containerSorter.supportsSortButton(clickedInventory)) return false;
+        if (event.getSlot() != ContainerSorter.CHEST_SORT_BUTTON_SLOT) return false;
+        if (!SortButton.isSortButton(event.getCurrentItem())) return false;
+
+        final var holder = clickedInventory.getHolder();
+        if (holder == null || !containerSorter.sortPreservingButton(clickedInventory, holder)) return false;
+
+        event.setCancelled(true);
+        syncInventory((Player) event.getWhoClicked());
+        return true;
     }
 
     private boolean trySortContainerFromHotbarButton(InventoryClickEvent event) {
@@ -76,7 +113,8 @@ public final class InventoryListener implements Listener {
 
         final var clickedInventory = event.getClickedInventory();
         if (clickedInventory == null || clickedInventory.getType() != InventoryType.PLAYER) return false;
-        if (event.getSlotType() != InventoryType.SlotType.QUICKBAR || event.getSlot() != HOTBAR_SORT_BUTTON_SLOT) {
+        if (event.getSlotType() != InventoryType.SlotType.QUICKBAR
+            || event.getSlot() != ContainerSorter.HOTBAR_SORT_BUTTON_SLOT) {
             return false;
         }
 
@@ -84,37 +122,18 @@ public final class InventoryListener implements Listener {
         if (topInventory.getType() == InventoryType.CRAFTING) return false;
 
         final var holder = topInventory.getHolder();
-        if (holder == null || !sortContainerInventory(topInventory, holder)) return false;
+        if (holder == null || !containerSorter.sortPreservingButton(topInventory, holder)) return false;
 
         event.setCancelled(true);
-        syncInventory(event);
+        syncInventory((Player) event.getWhoClicked());
         return true;
-    }
-
-    private boolean sortContainerInventory(Inventory inventory, InventoryHolder holder) {
-        return switch (inventory.getType()) {
-            case ENDER_CHEST, SHULKER_BOX, BARREL, DROPPER, DISPENSER, HOPPER -> {
-                inventorySorter.sortInventory(inventory);
-                yield true;
-            }
-            case CHEST -> {
-                switch (holder) {
-                    case Llama llama -> inventorySorter.sortInventory(inventory, 2, llama.getStrength() * 3 + 1);
-                    case ChestedHorse ignored -> inventorySorter.sortInventory(inventory, 2, 16);
-                    default -> inventorySorter.sortInventory(inventory);
-                }
-                yield true;
-            }
-            default -> false;
-        };
     }
 
     private static boolean isPlayerOnlyView(InventoryClickEvent event) {
         return event.getView().getTopInventory().getType() == InventoryType.CRAFTING;
     }
 
-    private static void syncInventory(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+    private static void syncInventory(Player player) {
         Bukkit.getScheduler().runTask(ChestSortPlus.instance(), player::updateInventory);
     }
 }
