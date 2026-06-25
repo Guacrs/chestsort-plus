@@ -1,5 +1,6 @@
 package com.uravgcode.chestsortplus.dialog;
 
+import com.uravgcode.chestsortplus.ChestSortPlus;
 import com.uravgcode.chestsortplus.key.ChestSortKeys;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
@@ -52,10 +53,11 @@ public final class SettingsDialog {
 
     private DialogInput enableDialogInput() {
         final var dataContainer = player.getPersistentDataContainer();
+        final var defaultEnabled = ChestSortPlus.instance().getConfig().getBoolean("settings.default-enabled", true);
         final var enabled = dataContainer.getOrDefault(
             ChestSortKeys.ENABLED,
             PersistentDataType.BOOLEAN,
-            false
+            defaultEnabled
         );
 
         return DialogInput.singleOption(

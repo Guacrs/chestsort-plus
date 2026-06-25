@@ -17,7 +17,6 @@ import org.jspecify.annotations.NullMarked;
 public final class ChestSortCommand {
     public LiteralCommandNode<CommandSourceStack> build() {
         return Commands.literal("chestsort")
-            .requires(sender -> sender.getSender().hasPermission("chestsort.use"))
             .executes(this::settings)
             .then(Commands.literal("version")
                 .requires(source -> source.getSender().hasPermission("chestsort.admin"))

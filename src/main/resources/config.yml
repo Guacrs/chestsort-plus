@@ -6,6 +6,10 @@ config:
   # current plugin version, do not change this
   version: ${version}
 
+settings:
+  # sorting is on by default for all players; they can opt out via /chestsort
+  default-enabled: true
+
 categories:
   - combat
   - tools_and_utilities
