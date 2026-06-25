@@ -1,10 +1,13 @@
 package com.uravgcode.chestsortplus.listener;
 
+import com.uravgcode.chestsortplus.ChestSortPlus;
 import com.uravgcode.chestsortplus.key.ChestSortKeys;
 import com.uravgcode.chestsortplus.sorter.InventorySorter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.ChestedHorse;
 import org.bukkit.entity.Llama;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -44,16 +47,20 @@ public final class InventoryListener implements Listener {
 
         switch (inventory.getType()) {
             case PLAYER -> {
+                if (!isPlayerOnlyView(event)) return;
+
                 if (event.getSlotType() == InventoryType.SlotType.QUICKBAR) {
                     inventorySorter.sortInventory(inventory, 0, 8);
                 } else {
                     inventorySorter.sortInventory(inventory, 9, 35);
                 }
                 event.setCancelled(true);
+                syncInventory(event);
             }
             case ENDER_CHEST, SHULKER_BOX, BARREL, DROPPER, DISPENSER, HOPPER -> {
                 inventorySorter.sortInventory(inventory);
                 event.setCancelled(true);
+                syncInventory(event);
             }
             case CHEST -> {
                 switch (holder) {
@@ -62,7 +69,17 @@ public final class InventoryListener implements Listener {
                     default -> inventorySorter.sortInventory(inventory);
                 }
                 event.setCancelled(true);
+                syncInventory(event);
             }
         }
+    }
+
+    private static boolean isPlayerOnlyView(InventoryClickEvent event) {
+        return event.getView().getTopInventory().getType() == InventoryType.CRAFTING;
+    }
+
+    private static void syncInventory(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        Bukkit.getScheduler().runTask(ChestSortPlus.instance(), player::updateInventory);
     }
 }
