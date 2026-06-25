@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
 
@@ -39,30 +40,46 @@ public final class InventoryListener implements Listener {
         final var inventory = event.getClickedInventory();
         if (inventory == null) return;
 
-        final var holder = inventory.getHolder();
-        if (holder == null) return;
-
         switch (inventory.getType()) {
             case PLAYER -> {
-                if (event.getSlotType() == InventoryType.SlotType.QUICKBAR) {
-                    inventorySorter.sortInventory(inventory, 0, 8);
-                } else {
-                    inventorySorter.sortInventory(inventory, 9, 35);
+                // Slot 8 should only trigger sorting while a container is open.
+                if (event.getSlotType() != InventoryType.SlotType.QUICKBAR || event.getSlot() != 8 || isPlayerInventoryView(event)) {
+                    return;
                 }
+                sortInventory(event.getView().getTopInventory());
                 event.setCancelled(true);
             }
             case ENDER_CHEST, SHULKER_BOX, BARREL, DROPPER, DISPENSER, HOPPER -> {
-                inventorySorter.sortInventory(inventory);
+                sortInventory(inventory);
                 event.setCancelled(true);
             }
             case CHEST -> {
+                sortInventory(inventory);
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    private boolean isPlayerInventoryView(InventoryClickEvent event) {
+        return switch (event.getView().getTopInventory().getType()) {
+            case PLAYER, CRAFTING, CREATIVE -> true;
+            default -> false;
+        };
+    }
+
+    private void sortInventory(Inventory inventory) {
+        switch (inventory.getType()) {
+            case CHEST -> {
+                final var holder = inventory.getHolder();
+                if (holder == null) return;
                 switch (holder) {
                     case Llama llama -> inventorySorter.sortInventory(inventory, 2, llama.getStrength() * 3 + 1);
                     case ChestedHorse ignored -> inventorySorter.sortInventory(inventory, 2, 16);
                     default -> inventorySorter.sortInventory(inventory);
                 }
-                event.setCancelled(true);
             }
+            case PLAYER -> inventorySorter.sortInventory(inventory, 0, 8);
+            default -> inventorySorter.sortInventory(inventory);
         }
     }
 }
